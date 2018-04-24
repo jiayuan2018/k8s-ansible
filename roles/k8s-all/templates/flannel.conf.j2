@@ -1,0 +1,9 @@
+{% set vars = {'etcd_cluster': ''} %}
+{% for host in groups['k8s-etcd'] %}
+    {% set tmp = "http://%s:2379,"|format(host)%}
+    {% if vars.update({'etcd_cluster': vars.etcd_cluster + tmp}) %}
+    {% endif %}
+{% endfor %}
+
+FLANNEL_ETCD_ENDPOINTS="{{ vars.etcd_cluster.strip(',') }}"
+FLANNEL_ETCD_PREFIX="{{ flannel_etcd_prefix }}"

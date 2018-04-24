@@ -1,0 +1,76 @@
+#!/bin/bash
+
+{% set vars = {} %}
+{% for host in groups['k8s-node'] %}
+    {% if host in ansible_all_ipv4_addresses %}
+        {% if vars.update({'host_ip': host}) %}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+
+MASTER_ADDRESS="{{ groups['k8s-master'][0] }}"
+NODE_ADDRESS="{{ vars.host_ip }}"
+DNS_SERVER_IP="{{ k8s_dns_ip }}"
+DNS_DOMAIN="{{ k8s_dns_domain }}"
+KUBECONFIG_DIR=${KUBECONFIG_DIR:-/opt/kubernetes/cfg}
+
+# Generate a kubeconfig file
+cat <<EOF > "${KUBECONFIG_DIR}/kubelet.kubeconfig"
+apiVersion: v1
+kind: Config
+clusters:
+  - cluster:
+      server: http://${MASTER_ADDRESS}:8080/
+    name: local
+contexts:
+  - context:
+      cluster: local
+    name: local
+current-context: local
+EOF
+
+cat <<EOF >/opt/kubernetes/cfg/kubelet
+KUBE_LOGTOSTDERR="--logtostderr=true"
+KUBE_LOG_LEVEL="--v=4"
+NODE_ADDRESS="--address=${NODE_ADDRESS}"
+NODE_PORT="--port=10250"
+NODE_HOSTNAME="--hostname-override=${NODE_ADDRESS}"
+KUBELET_KUBECONFIG="--kubeconfig=${KUBECONFIG_DIR}/kubelet.kubeconfig"
+KUBE_ALLOW_PRIV="--allow-privileged=false"
+KUBELET__DNS_IP="--cluster-dns=${DNS_SERVER_IP}"
+KUBELET_DNS_DOMAIN="--cluster-domain=${DNS_DOMAIN}"
+
+# Add your own!
+KUBELET_ARGS=""
+EOF
+
+KUBELET_OPTS="      \${KUBE_LOGTOSTDERR}     \\
+                    \${KUBE_LOG_LEVEL}       \\
+                    \${NODE_ADDRESS}         \\
+                    \${NODE_PORT}            \\
+                    \${NODE_HOSTNAME}        \\
+                    \${KUBELET_KUBECONFIG}   \\
+                    \${KUBE_ALLOW_PRIV}      \\
+                    \${KUBELET__DNS_IP}      \\
+                    \${KUBELET_DNS_DOMAIN}   \\
+                    \$KUBELET_ARGS"
+
+cat <<EOF >/usr/lib/systemd/system/kubelet.service
+[Unit]
+Description=Kubernetes Kubelet
+After=docker.service
+Requires=docker.service
+
+[Service]
+EnvironmentFile=-/opt/kubernetes/cfg/kubelet
+ExecStart=/opt/kubernetes/bin/kubelet ${KUBELET_OPTS}
+Restart=on-failure
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable kubelet
+systemctl restart kubelet

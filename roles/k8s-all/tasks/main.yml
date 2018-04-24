@@ -1,0 +1,51 @@
+- name: install k8s config dir
+  file: 
+    name: "{{ item }}"
+    owner: root
+    group: root
+    state: directory
+  with_items:
+    - "{{ k8s_cfg_dir }}"
+    - "{{ k8s_bin_dir }}"
+    - "{{ k8s_shell_dir }}"
+  tags: k8s-all
+
+- name: install docker dependency package
+  yum:
+    name:
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+  tags: k8s-all
+
+- name: close swap partion
+  command: swapoff -a
+  tags: k8s-all
+
+  #- name: install aliyun docker-ce repo and enabled repo
+  #  shell: yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo && yum makecache fast
+  #  tags: k8s-all
+
+- name: install docker-ce and flanned
+  yum: 
+    name:
+      - docker-ce
+      - flannel
+  tags: k8s-all
+
+- name: install flannel config file
+  template: src=flannel.conf.j2 dest={{ flannel_env_config }}
+  notify:
+    - restart flanneld
+    - restart docker
+  tags: k8s-all
+
+- name: install docker.service config file
+  template: src=docker.conf.j2 dest={{ docker_service_config }}
+  notify:
+    - restart docker
+  tags: k8s-all
+
+- name: pull pause container and docker tag
+  shell: "docker pull {{ pause_container_image }} && docker tag {{ pause_container_image }} {{ pause_container_tag }}"
+

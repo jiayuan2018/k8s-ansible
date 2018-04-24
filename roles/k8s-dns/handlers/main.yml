@@ -1,0 +1,5 @@
+- name: execute kubedns-deployment.yaml
+  shell: "kubectl replace -f {{ k8s_manifest }}kubedns-deployment.yaml --force"
+
+- name: execute kubedns-svc.yaml
+  shell: "kubectl replace -f {{ k8s_manifest }}kubedns-svc.yaml --force"

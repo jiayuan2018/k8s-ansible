@@ -1,0 +1,3 @@
+site.retry
+roles/k8s-master/files/*
+roles/k8s-node/files/*

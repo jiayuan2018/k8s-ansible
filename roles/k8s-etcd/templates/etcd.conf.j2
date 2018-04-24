@@ -1,0 +1,25 @@
+{% set vars = {'etcd_cluster': ''} %}
+{% for host in groups['k8s-etcd'] %}
+    {% if host in ansible_all_ipv4_addresses %}
+        {% if vars.update({'host_ip': host}) %}
+        {% endif %}
+        {% if vars.update({'etcd_name': "%s%d"|format(etcd_basename, loop.index)}) %}
+        {% endif %}
+    {% endif %}
+    {% set tmp = "%s%d=http://%s:2380,"|format(etcd_basename, loop.index, host)%}
+    {% if vars.update({'etcd_cluster': vars.etcd_cluster + tmp}) %}
+    {% endif %}
+{% endfor %}
+
+ETCD_DATA_DIR="{{ etcd_data_dir }}"
+ETCD_WAL_DIR="{{ etcd_wal_dir }}"
+ETCD_LISTEN_PEER_URLS="http://{{ vars.host_ip }}:2380"
+ETCD_LISTEN_CLIENT_URLS="http://{{ vars.host_ip }}:2379,http://127.0.0.1:2379"
+ETCD_NAME="{{ vars.etcd_name }}"
+
+#[Clustering]
+ETCD_INITIAL_ADVERTISE_PEER_URLS="http://{{ vars.host_ip }}:2380"
+ETCD_ADVERTISE_CLIENT_URLS="http://{{ vars.host_ip }}:2379"
+ETCD_INITIAL_CLUSTER="{{ vars.etcd_cluster.strip(',') }}"
+ETCD_INITIAL_CLUSTER_TOKEN="{{ cluster_name }}"
+ETCD_INITIAL_CLUSTER_STATE="new"

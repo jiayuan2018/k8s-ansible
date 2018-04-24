@@ -1,0 +1,17 @@
+- name: restart kube-apiserver
+  service: name=kube-apiserver state=restarted
+
+- name: restart kube-controller-manager
+  service: name=kube-controller state=restarted
+
+- name: restart kube-scheduler
+  service: name=kube-scheduler state=restarted
+
+- name: reexecute apiserver.sh
+  shell: "{{ apiserver_shell }}"
+
+- name: reexecute controller-manager.sh
+  shell: "{{ controller_manager_shell }}"
+
+- name: reexecute scheduler.sh
+  shell: "{{ scheduler_shell }}"

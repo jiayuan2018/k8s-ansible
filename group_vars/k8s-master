@@ -1,0 +1,4 @@
+kubectl_bin: /usr/bin/kubectl
+apiserver_shell: "{{ k8s_shell_dir }}apiserver.sh"
+controller_manager_shell: "{{ k8s_shell_dir }}controller-manager.sh"
+scheduler_shell: "{{ k8s_shell_dir }}scheduler.sh"

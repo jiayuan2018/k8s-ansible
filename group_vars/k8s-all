@@ -1,0 +1,5 @@
+flannel_env_config: /etc/sysconfig/flanneld
+docker_service_config: /usr/lib/systemd/system/docker.service
+
+pause_container_image: registry.cn-hangzhou.aliyuncs.com/google-containers/pause-amd64:3.0
+pause_container_tag: gcr.io/google_containers/pause-amd64:3.0

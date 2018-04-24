@@ -1,0 +1,24 @@
+- hosts: k8s-etcd
+  remote_user: root
+  roles:
+    - k8s-etcd
+
+- hosts: k8s-all
+  remote_user: root
+  roles:
+    - k8s-all
+
+- hosts: k8s-master
+  remote_user: root
+  roles:
+    - k8s-master
+
+- hosts: k8s-node
+  remote_user: root
+  roles:
+    - k8s-node
+
+- hosts: k8s-dns
+  remote_user: root
+  roles: 
+    - k8s-dns

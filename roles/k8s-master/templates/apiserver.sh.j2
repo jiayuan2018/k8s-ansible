@@ -1,0 +1,57 @@
+#!/bin/bash
+
+{% set vars = {'etcd_cluster': ''} %}
+{% for host in groups['k8s-etcd'] %}
+    {% set tmp = "http://%s:2379,"|format(host)%}
+    {% if vars.update({'etcd_cluster': vars.etcd_cluster + tmp}) %}
+    {% endif %}
+{% endfor %}
+
+MASTER_ADDRESS="{{ groups['k8s-master'][0] }}"
+ETCD_SERVERS="{{ vars.etcd_cluster.strip(',') }}"
+SERVICE_CLUSTER_IP_RANGE="{{ k8s_ip_range }}"
+ADMISSION_CONTROL=""
+
+cat <<EOF >/opt/kubernetes/cfg/kube-apiserver
+KUBE_LOGTOSTDERR="--logtostderr=true"
+KUBE_LOG_LEVEL="--v=4"
+KUBE_ETCD_SERVERS="--etcd-servers=${ETCD_SERVERS}"
+KUBE_API_ADDRESS="--insecure-bind-address=0.0.0.0"
+KUBE_API_PORT="--insecure-port=8080"
+NODE_PORT="--kubelet-port=10250"
+KUBE_ADVERTISE_ADDR="--advertise-address=${MASTER_ADDRESS}"
+KUBE_ALLOW_PRIV="--allow-privileged=false"
+KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range=${SERVICE_CLUSTER_IP_RANGE}"
+KUBE_ADMISSION_CONTROL="--admission-control=${ADMISSION_CONTROL}"
+
+EOF
+
+KUBE_APISERVER_OPTS="   \${KUBE_LOGTOSTDERR}         \\
+                        \${KUBE_LOG_LEVEL}           \\
+                        \${KUBE_ETCD_SERVERS}        \\
+                        \${KUBE_API_ADDRESS}         \\
+                        \${KUBE_API_PORT}            \\
+                        \${NODE_PORT}                \\
+                        \${KUBE_ADVERTISE_ADDR}      \\
+                        \${KUBE_ALLOW_PRIV}          \\
+                        \${KUBE_SERVICE_ADDRESSES}   \\
+                        \${KUBE_ADMISSION_CONTROL}"
+
+
+cat <<EOF >/usr/lib/systemd/system/kube-apiserver.service
+[Unit]
+Description=Kubernetes API Server
+Documentation=https://github.com/kubernetes/kubernetes
+
+[Service]
+EnvironmentFile=-/opt/kubernetes/cfg/kube-apiserver
+ExecStart=/opt/kubernetes/bin/kube-apiserver ${KUBE_APISERVER_OPTS}
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable kube-apiserver
+systemctl restart kube-apiserver

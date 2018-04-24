@@ -1,0 +1,11 @@
+- name: install kubedns-svc.yaml
+  copy: src=kubedns-svc.yaml dest={{ k8s_manifest }}kubedns-svc.yaml owner=root group=root mode=0755
+  notify:
+    - execute kubedns-svc.yaml
+  tags: k8s-dns
+
+- name: install kubedns-deployment.yaml
+  copy: src=kubedns-deployment.yaml dest={{ k8s_manifest }}kubedns-deployment.yaml owner=root group=root mode=0755
+  notify:
+    - execute kubedns-deployment.yaml
+  tags: k8s-dns

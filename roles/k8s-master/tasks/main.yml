@@ -1,0 +1,40 @@
+- name: install k8s manifest dir
+  file: name={{ k8s_manifest }} owner=root group=root state=directory
+  tags: k8s-master
+
+- name: install k8s master bin
+  copy: 
+    src: "{{ item }}"
+    dest: "{{ k8s_bin_dir }}{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+  tags: k8s-master
+
+- name: install kubectl on k8s master
+  copy: src=kubectl dest={{ kubectl_bin }} owner=root group=root mode=0755
+  tags: k8s-master
+
+- name: install k8s master apiserver.sh
+  template: src=apiserver.sh.j2 dest={{ apiserver_shell }} owner=root group=root mode=0755
+  notify:
+    - reexecute scheduler.sh
+    - reexecute controller-manager.sh
+    - reexecute apiserver.sh
+  tags: k8s-master
+
+- name: install k8s master controller-manager.sh
+  template: src=controller-manager.sh.j2 dest={{ controller_manager_shell }} owner=root group=root mode=0755
+  notify:
+    - reexecute controller-manager.sh
+  tags: k8s-master
+
+- name: install k8s master scheduler.sh
+  template: src=scheduler.sh.j2 dest={{ scheduler_shell }} owner=root group=root mode=0755
+  notify:
+    - reexecute scheduler.sh
+  tags: k8s-master

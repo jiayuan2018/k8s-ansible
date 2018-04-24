@@ -1,0 +1,6 @@
+etcd_data_dir: /opt/data/etcd/data
+etcd_wal_dir: /opt/data/etcd/wal
+etcd_logs_dir: /opt/data/etcd/logs
+cluster_name: etcd-cluster
+etcd_basename: infra
+etcd_env_config: /etc/etcd/etcd.conf

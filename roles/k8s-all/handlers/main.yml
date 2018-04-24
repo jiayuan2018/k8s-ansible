@@ -1,0 +1,5 @@
+- name: restart flanneld
+  service: name=flanneld enabled=yes state=restarted
+
+- name: restart docker
+  service: name=docker enabled=yes state=restarted

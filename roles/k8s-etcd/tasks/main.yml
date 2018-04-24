@@ -1,0 +1,36 @@
+- name: install etcd
+  yum: name=etcd
+  tags: k8s-etcd
+
+- name: create directory
+  file: 
+    name: "{{ item }}"
+    owner: etcd
+    group: etcd
+    state: directory
+  with_items:
+    - "{{ etcd_data_dir }}"
+    - "{{ etcd_wal_dir }}"
+    - "{{ etcd_logs_dir }}"
+  tags: k8s-etcd
+
+- name: install etcd config file
+  template: src=etcd.conf.j2 dest={{ etcd_env_config }}
+  notify:
+    - restart etcd
+  tags: k8s-etcd
+
+- name: start etcd
+  service: name=etcd state=started
+  tags: k8s-etcd
+
+  #- name: check etcd flannel network config  key exist and save result
+  #  shell: "etcdctl get {{ flannel_etcd_network_config }}"
+  #  register: result
+  #  tags: k8s-etcd
+
+- name: set flannel network subset
+  shell: "etcdctl mk {{ flannel_etcd_network_config }} '{\"Network\": \"{{ k8s_ip_range }}\", \"SubnetLen\": 24, \"Backend\": { \"Type\": \"vxlan\" }}'"
+  #when: result == ''
+  ignore_errors: yes
+  tags: k8s-etcd

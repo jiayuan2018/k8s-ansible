@@ -1,0 +1,25 @@
+- name: install k8s node bin
+  copy: 
+    src: "{{ item }}"
+    dest: "{{ k8s_bin_dir }}{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - kubelet
+    - kube-proxy
+  tags: k8s-node
+
+- name: install k8s node kubele.sh
+  template: src=kubelet.sh.j2 dest={{ kubelet_shell }} owner=root group=root mode=0755
+  notify:
+    - reexecute proxy.sh
+    - reexecute kubelet.sh
+  tags: k8s-node
+
+- name: install k8s node proxy.sh
+  template: src=proxy.sh.j2 dest={{ kube_proxy_shell }} owner=root group=root mode=0755
+  notify:
+    - reexecute proxy.sh
+  tags: k8s-node
+

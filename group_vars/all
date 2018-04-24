@@ -1,0 +1,8 @@
+k8s_cfg_dir: /opt/kubernetes/cfg/
+k8s_bin_dir: /opt/kubernetes/bin/
+k8s_shell_dir: /opt/kubernetes/shell/
+k8s_manifest: /opt/kubernetes/manifest/
+
+k8s_ip_range: 10.10.10.0/16
+flannel_etcd_prefix: /coreos.com/network
+flannel_etcd_network_config: "{{ flannel_etcd_prefix }}/config"

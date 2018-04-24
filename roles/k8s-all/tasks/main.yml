@@ -22,9 +22,9 @@
   command: swapoff -a
   tags: k8s-all
 
-  #- name: install aliyun docker-ce repo and enabled repo
-  #  shell: yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo && yum makecache fast
-  #  tags: k8s-all
+- name: install aliyun docker-ce repo and enabled repo
+  shell: yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo && yum makecache fast
+  tags: k8s-all
 
 - name: install docker-ce and flanned
   yum: 
